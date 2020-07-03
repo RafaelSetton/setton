@@ -1,6 +1,6 @@
-from setton.setton.Tones import a, bfl, c, d, e, f, g, sil, play
-from setton.setton.utils import keyboard_listener, valida_resposta, trata_acento
-from setton.setton.matematica import limite
+from setton.Tones import a, bfl, c, d, e, f, g, sil, play
+from setton import keyboard_listener, valida_resposta, trata_acento
+from setton.matematica import limite
 from random import choice
 from os import listdir, path
 from pygame import mixer, error

@@ -3,9 +3,9 @@ from threading import Thread
 from keyboard import wait
 from random import randint
 from os import listdir, path
-from setton.setton.constantes import A_ESPECIAL, E_ESPECIAL, I_ESPECIAL, O_ESPECIAL, U_ESPECIAL, PONTUACAO
-from setton.setton.constantes import ALFABETO_MINUSCULO, MORSE_COMPLETO, CODABLE
-from setton.setton.matematica import primos_ate
+from setton.constantes import A_ESPECIAL, E_ESPECIAL, I_ESPECIAL, O_ESPECIAL, U_ESPECIAL, PONTUACAO
+from setton.constantes import ALFABETO_MINUSCULO, MORSE_COMPLETO, CODABLE
+from setton.matematica import primos_ate
 from requests import get
 
 
