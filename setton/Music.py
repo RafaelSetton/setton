@@ -1,6 +1,6 @@
-from setton.Tones import a, bfl, c, d, e, f, g, sil, play
-from setton import keyboard_listener, valida_resposta, trata_acento
-from setton.matematica import limite
+from Tones import a, bfl, c, d, e, f, g, sil, play
+from utils import keyboard_listener, valida_resposta, trata_acento
+from matematica import limite
 from random import choice
 from os import listdir, path
 from pygame import mixer, error
@@ -32,19 +32,18 @@ def coffin_dance():
 
     def x4():
         notas = [
-            lambda: bfl(5, 250),
-            lambda: d(6, 250),
-            lambda: c(6, 250),
-            lambda: f(6, 250),
-            lambda: g(6, 250),
-            lambda: g(6, 250),
-            lambda: g(6, 250),
+            (bfl, 5, 250),
+            (d, 6, 250),
+            (c, 6, 250),
+            (f, 6, 250),
+            (g, 6, 250),
+            (g, 6, 250),
+            (g, 6, 250),
         ]
-        for nota in notas:
-            nota()
-            nota()
-            nota()
-            nota()
+        for tup in notas:
+            nota, oitava, mili = tup
+            for _ in range(4):
+                nota(oitava, mili)
 
     def fall():
         c(6, 250)
@@ -63,13 +62,12 @@ def coffin_dance():
     geral()
 
     x4()
-
     fall()
 
     geral()
 
 
-def toca_musica(caminho):
+def toca_mp3(caminho):
     mixer.init()
     mixer.music.load(caminho)
     mixer.music.play()
@@ -85,7 +83,9 @@ def toca_musicas_mp3():
         mus = trata_acento(mus)[0]
 
         if mus == 'Random':
-            mus = choice(listdir(caminho).remove('Adicionar'))[:-4]
+            options = listdir(caminho)
+            options.remove('Adicionar')
+            mus = choice(options)[:-4]
         try:
             mixer.music.load(path.join(caminho, mus + '.mp3'))
         except error:

@@ -43,4 +43,4 @@ def par_impar():
 
 
 def dado(lados):
-    return choice(range(lados)) + 1
+    return randint(1, lados)

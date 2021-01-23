@@ -1,0 +1,11 @@
+venv/
+.idea/
+__pycache__/
+tests/
+build/
+dist/
+setton.egg-info/
+setton_RafaelSetton.egg-info/
+
+update_readme.py
+setup.py

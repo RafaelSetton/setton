@@ -62,5 +62,3 @@ ADJACENTES_TECLADO = {'a': {'linha': 2, 'coluna': 1, 'adjacentes': ['q', 'w', 's
                       'x': {'linha': 3, 'coluna': 2, 'adjacentes': ['z', 's', 'd', 'c']},
                       'y': {'linha': 1, 'coluna': 6, 'adjacentes': ['t', 'g', 'h', 'u']},
                       'z': {'linha': 3, 'coluna': 1, 'adjacentes': ['a', 's', 'x', '\\']}}
-
-p = print
