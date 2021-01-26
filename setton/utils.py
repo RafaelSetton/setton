@@ -3,16 +3,16 @@ from threading import Thread
 from keyboard import wait
 from random import randint
 from os import listdir, path
-from .constantes import MORSE_COMPLETO, CODABLE, PONTUACAO, \
-    A_ESPECIAL, E_ESPECIAL, I_ESPECIAL, O_ESPECIAL, U_ESPECIAL, ALFABETO_MINUSCULO
-from .matematica import primos_ate
+from setton.constantes import MORSE_COMPLETO, A_ESPECIAL, E_ESPECIAL, I_ESPECIAL, O_ESPECIAL, U_ESPECIAL, CODABLE
+from setton.matematica import primos_ate
+from string import ascii_lowercase, punctuation
 from requests import get
 from cv2 import imread, imwrite
-from typing import Tuple, List, Dict, Any, Callable, Iterable
+from typing import Any, Callable
 from PIL import Image
 
 
-class MyList(list):
+class List(list):
     def _remove(self, __value):
         self.remove(__value)
         return self
@@ -36,6 +36,11 @@ class MyList(list):
                 pass
 
 
+class String(str):
+    def __sub__(self, other: str):
+        return String(''.join(filter(lambda x: x not in other, self)))
+
+
 def trata_texto(acentos: bool = True, pontos: bool = True) -> callable:
     def decorador(funcao):
         def tratamento(*args):
@@ -53,7 +58,7 @@ def trata_texto(acentos: bool = True, pontos: bool = True) -> callable:
     return decorador
 
 
-def keyboard_listener(dic_funcs: Dict[Any, Callable[[], None]]) -> None:
+def keyboard_listener(dic_funcs: dict[Any, Callable[[], None]]) -> None:
     """
     Inicia Threads que executam as funções ao pressionar suas respectivas teclas.
     :param dic_funcs: Um dicionário no formato {tecla: funcao}. funcao() será executado quando tecla for pressionado.
@@ -74,7 +79,7 @@ def keyboard_listener(dic_funcs: Dict[Any, Callable[[], None]]) -> None:
         thread.start()
 
 
-def valida_resposta(texto: str, respostas: Iterable[Any], somente_maiusculas: bool = True) -> str:
+def valida_resposta(texto: str, respostas: iter, somente_maiusculas: bool = True) -> str:
     """
     Faz inputs até que a resposta do usuário seja válida
     :param texto: O texto a ser exibido na tela
@@ -96,7 +101,7 @@ def valida_resposta(texto: str, respostas: Iterable[Any], somente_maiusculas: bo
     return res
 
 
-def trata_acento(*args) -> Tuple[Any]:
+def trata_acento(*args) -> tuple:
     """
     Para cada item em args, se type(item) == str, retira os acentos das letras em item.
     :param args: Os textos para retirar os acentos.
@@ -123,7 +128,7 @@ def trata_acento(*args) -> Tuple[Any]:
     return tuple(args)
 
 
-def trata_ponto(*args) -> Tuple[Any]:
+def trata_ponto(*args) -> tuple:
     """
     Para cada item em args, se type(item) == str, retira os pontos em item.
     :param args: Os textos para retirar os pontos.
@@ -132,12 +137,12 @@ def trata_ponto(*args) -> Tuple[Any]:
     args = list(args)
     for texto in args:
         if type(texto) == str:
-            for ponto in PONTUACAO:
+            for ponto in punctuation:
                 texto.replace(ponto, ' ')
     return tuple(args)
 
 
-def split_nth(iteravel: Iterable[Any], n: int) -> List[Any]:
+def split_nth(iteravel: iter, n: int) -> list:
     """
     Divide o iteravel a cada n itens
     :param iteravel: O iterável para ser partido
@@ -207,12 +212,12 @@ def codifica(texto, modo, repetir) -> str:
     if modo == 3:
         dic = str.maketrans({code[0]: code[1] for code in MORSE_COMPLETO})
         resultado = [let.translate(dic) for let in list(texto)]
-        texto = '|'.join(resultado)
+        texto = ' '.join(resultado)
     # Primos
     if modo == 4:
         texto = trata_ponto(texto)[0]
         nums = [f"{num:2}".replace(' ', '0') for num in ([1] + primos_ate(100))]
-        codes = str.maketrans({letra: num for num, letra in zip(nums, ALFABETO_MINUSCULO)})
+        codes = str.maketrans({letra: num for num, letra in zip(nums, ascii_lowercase)})
         texto = texto.translate(codes)
     # Unicode
     if modo == 5:
@@ -274,18 +279,20 @@ def decodifica(texto, modo, repetir) -> str:
     # Morse
     if modo == 3:
         resultado = []
-        texto = texto.split('|')
+        texto = texto.split()
         for letra in texto:
             for code in MORSE_COMPLETO:
                 if letra == code[1]:
                     resultado.append(code[0])
-                else:
-                    pass
+                    break
+            else:
+                resultado.append(letra)
+
         texto = ''.join(resultado)
     # Primos
     if modo == 4:
         nums = [f"{num:2}".replace(' ', '0') for num in ([1] + primos_ate(100))]
-        codes = tuple((num, letra) for num, letra in zip(nums, ALFABETO_MINUSCULO))
+        codes = tuple((num, letra) for num, letra in zip(nums, ascii_lowercase))
         texto = split_nth(texto, 2)
         res = ''
 
@@ -305,7 +312,7 @@ def decodifica(texto, modo, repetir) -> str:
     return texto
 
 
-def udir(objeto: object) -> List[str]:
+def udir(objeto: object) -> list[str]:
     """
     Executa a função dir(objeto) e retorna somente as propriedades e/ou métodos que não começam com '__'
     :param objeto: O objeto que deve ser utilizado
@@ -318,7 +325,7 @@ def udir(objeto: object) -> List[str]:
     return lista
 
 
-def mais_repetidas(iterable: Iterable[Any], quantidade_de_itens: int = 3, quantidade_minima: int = 0) -> List[Any]:
+def mais_repetidas(iterable: iter, quantidade_de_itens: int = 3, quantidade_minima: int = 0) -> list:
     """
     Busca os itens mais repetidos em um iterável
     :param iterable: O iterável para fazer a busca
@@ -332,30 +339,16 @@ def mais_repetidas(iterable: Iterable[Any], quantidade_de_itens: int = 3, quanti
     return text[:quantidade_de_itens]
 
 
-def list_replace(lista: List[Any], old, new) -> List[Any]:
-    """
-    Substitui um item em uma lista
-    :param lista: A lista que deveser alterada
-    :param old: O item que deve ser trocado
-    :param new: O novo item que deve ser inserido
-    :return: A lista alterada
-    """
-    while old in lista:
-        ind = lista.index(old)
-        lista[ind] = new
-    return lista
-
-
-def inverte_dict(dicionario: Dict[Any, Any]) -> Dict[Any, Any]:
+def inverte_dict(dicionario: dict) -> dict:
     """
     Inverte um dicionário da seguinte maneira: {chave1: valor1, chave2: valor2} -> {valor1: chave1, valor2: chave2}
     :param dicionario: O dicionário que deve ser invertido
     :return: O novo dicionário
     """
-    return {dicionario[key]: key for key in dicionario.keys()}
+    return {v: k for k, v in dicionario.items()}
 
 
-def alphalen(iterable: Iterable[Any]) -> int:
+def alphalen(iterable: iter) -> int:
     """
     Retorna  o tamanho do iteravel contando somente os itens que satisfazem item.isaplha()
     :param iterable: O iterável que deverá ser contado
@@ -368,17 +361,17 @@ def alphalen(iterable: Iterable[Any]) -> int:
     return alen
 
 
-def max_2_keys(__iter: iter, primary: callable, secondary: callable) -> Any:
+def sort_2_keys(__iter: iter, primary: callable, secondary: callable, reverse: bool = False):
     """
-    Retorna o valor máximo baseado em uma chave primária e uma secundária
-    :param __iter: O iterável que contém os valores para checagem
+    Retorna o uma lista ordenada com base em uma chave primária e uma secundária
+    :param __iter: O iterável para ser ordenado
     :param primary: A chave primária de checagem
     :param secondary: A chave secundária de checagem
-    :return: O valor máximo
+    :param reverse: Se for verdadeiro, a lista será ordenada do maior para o menor
+    :return: A lista ordenada
     """
-    srtd = sorted(__iter, key=primary, reverse=True)
-    filtered = filter(lambda x: primary(x) == primary(srtd[0]), srtd)
-    return sorted(filtered, key=secondary, reverse=True)[0]
+    __iter = sorted(__iter, key=secondary, reverse=reverse)
+    return sorted(__iter, key=primary, reverse=reverse)
 
 
 def get_all_files(directory: str, extension: str = '*', start_string: str = './', ignore_file='') -> str:
@@ -421,7 +414,7 @@ def get_all_files(directory: str, extension: str = '*', start_string: str = './'
                     yield nxt
 
 
-def dicionario_portugues() -> List[str]:
+def dicionario_portugues() -> list[str]:
     """
     Busca um dicionário de palavras da língua portuguesa e retorna uma lista com todas as palavras
     Origem: <https://raw.githubusercontent.com/pythonprobr/palavras/master/palavras.txt>
@@ -437,7 +430,7 @@ def dicionario_portugues() -> List[str]:
     return src.text.split('\n')
 
 
-def desempacota_listas(lista: List[Any]) -> List[Any]:
+def desempacota_listas(lista: list) -> list:
     """
     Desempacota um conjunto de listas uma dentro da outra e retorna em uma lista só
     :param lista: A lista inicial, possivelmente contendo outras listas
@@ -452,7 +445,7 @@ def desempacota_listas(lista: List[Any]) -> List[Any]:
     return new
 
 
-def get_pixels(img_path: str, cor: Tuple[int]) -> Tuple[int]:
+def get_pixels(img_path: str, cor: tuple[int]) -> tuple[int]:
     """
     Retorna todos os pixels de uma determinada cor contidos na imagem especificada
     :param img_path: O caminho relativo para a imagem 
@@ -468,7 +461,7 @@ def get_pixels(img_path: str, cor: Tuple[int]) -> Tuple[int]:
                 yield x, y
 
 
-def esteganografia(texto: str, file_name: str = 'esteganografia.png', override: bool = False) -> Any:
+def esteganografia(texto: str, file_name: str = 'esteganografia.png', override: bool = False):
     def codificar():
         image = Image.new('RGB', (len(texto), 1))
         image.save(file_name, file_name[-3:].upper())

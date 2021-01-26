@@ -1,4 +1,4 @@
-from string import printable, whitespace
+from string import digits, ascii_letters, punctuation
 
 # Letras
 A_ESPECIAL = 'áâãàÁÂÃÀ'
@@ -8,11 +8,7 @@ O_ESPECIAL = 'óôõÓÔÕ'
 U_ESPECIAL = 'úÚ'
 VOGAIS = 'aeiou'
 CONSOANTES = 'bcdfghjklmnpqrstvwxyz'
-ALFABETO_MINUSCULO = ''.join(sorted(VOGAIS + CONSOANTES))
-ALFABETO_MAIUSCULO = ''.join(letra.upper() for letra in ALFABETO_MINUSCULO)
-ALFABETO_COMPLETO = ''.join(sorted(ALFABETO_MINUSCULO + ALFABETO_MAIUSCULO + ' '))
-PONTUACAO = '.,;:?!'
-CODABLE = ''.join([char for char in printable if char not in (whitespace + r"#%*<>[\]^_`{|}~")]) + ' '
+CODABLE = digits + ascii_letters + punctuation
 
 # Código Morse
 MORSE_MINUSCULO = (('a', '.-'), ('b', '-...'), ('c', '-.-.'),

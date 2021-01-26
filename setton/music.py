@@ -1,4 +1,4 @@
-from Tones import a, bfl, c, d, e, f, g, sil, play
+from setton.tones import a, bfl, c, d, e, f, g, sil, play
 from utils import keyboard_listener, valida_resposta, trata_acento
 from matematica import limite
 from random import choice

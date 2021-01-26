@@ -196,18 +196,56 @@ class Circulo(Forma2D):
         return round(pi*self.raio*self.raio, arredondar) if type(arredondar) == int else pi*self.raio*self.raio
 
 
-class PrismaRetangular:
+class Forma3D:
+    def __init__(self, vertices=None, faces=None, arestas=None):
+        self.__vertices = vertices
+        self.__faces = faces
+        self.__arestas = arestas
+
+        if self.__faces is None and \
+                type(self.__arestas) in (float or int) and type(self.__vertices) in (float or int):
+            self.__faces = 2 + self.__arestas - self.__vertices
+        elif self.__arestas is None and \
+                type(self.__faces) in (float or int) and type(self.__vertices) in (float or int):
+            self.__arestas = self.__faces + self.__vertices - 2
+        elif self.__vertices is None and \
+                type(self.__arestas) in (float or int) and type(self.__faces) in (float or int):
+            self.__vertices = 2 + self.__arestas - self.__faces
+
+    @property
+    def faces(self):
+        return self.__faces
+
+    @property
+    def arestas(self):
+        return self.__arestas
+
+    @property
+    def vertices(self):
+        return self.__vertices
+
+
+class PrismaRetangular(Forma3D):
     def __init__(self, altura, largura, profundidade):
         self.altura = altura
         self.largura = largura
         self.profundidade = profundidade
         self.medidas = [self.altura, self.largura, self.profundidade]
-        self.volume = times(*self.medidas)
-        self.area_superficial = sum([times(*comb) for comb in combinations(self.medidas, 2)])*2
+        super().__init__(8, 6, 12)
+
+    @property
+    def area_superficial(self):
+        return sum([lado1 * lado2 for lado1, lado2 in combinations(self.medidas, 2)])*2
+
+    @property
+    def volume(self):
+        return self.altura * self.largura * self.profundidade
 
     def massa(self, densidade):
         return densidade*self.volume
 
+
+# Conversões
 
 class AlgarismosRomanos:
     NUM_TO_STR = {1000: 'M',
@@ -246,30 +284,38 @@ class AlgarismosRomanos:
         return n
 
 
+class CelsiusFahrenheit:
+
+    @staticmethod
+    def to_celsius(fahrenheit: float, arredondar: int = False) -> (float, int):
+        """Converte um temperatura de celsius para fahrenheit"""
+        calc = (fahrenheit - 32) / 1.4
+        return round(calc, arredondar) if type(arredondar) == int else calc
+
+    @staticmethod
+    def celcius_fahrenheit(celsius: float, arredondar: int = False) -> (float, int):
+        """Converte um temperatura de celsius para fahrenheit"""
+        calc = celsius * 1.4 + 32
+        return round(calc, arredondar) if type(arredondar) == int else calc
+
+
+class RadianosGraus:
+    @staticmethod
+    def graus_radianos(graus: float, mostrar_como_decimal: bool = False) -> (float, str):
+        return pi * graus / 180 if mostrar_como_decimal else f"{graus/180}π"
+
+    @staticmethod
+    @dispatch(str)
+    def radianos_graus(radianos: str) -> float:
+        return float(radianos[:-1])*180
+
+    @staticmethod
+    @dispatch(float)
+    def radianos_graus(radianos: float) -> float:
+        return radianos * 180 / pi
+
+
 # Funções
-
-
-def add(*args):
-    """Soma todos os argumentos passados e retorna o resultado"""
-    return sum(args)
-
-
-def subtr(num1, num2, absolute=False):
-    """Recebe dois dados do tipo float e retorna o resultado da subtração do maior pelo menor"""
-    return abs(num1 - num2) if absolute else num1 - num2
-
-
-def times(*args):
-    """Multiplica todos os argumentos passados e retorna o resultado"""
-    return reduce(lambda x, y: x*y, args)
-
-
-def divide(dividendo, divisor, arredondar=False):
-    """Recebe dois dados do tipo float e retorna o resultado da divisão do primeiro pelo segundo"""
-    if type(arredondar) == int:
-        return round(dividendo / divisor, arredondar)
-    return dividendo / divisor
-
 
 def mmc2(num1, num2):
     maior = max(num1, num2)
@@ -374,161 +420,8 @@ def limite(maximo: float, minimo: float, valor: float) -> float:
     return min(max(valor, minimo), maximo)
 
 
-def par(numero: int, mudar: str = '') -> (bool, int):
-    res = numero % 2 == 0
-    if res or not mudar:
-        return res
-    if mudar == '+':
-        return numero + 1
-    elif mudar == '-':
-        return numero - 1
-    else:
-        raise ValueError("Mudar pode ser '+' ou '-'")
-
-
-def impar(numero: int, mudar: str = '') -> (bool, int):
-    res = numero % 2 == 1
-    if res or not mudar:
-        return res
-    if mudar == '+':
-        return numero + 1
-    elif mudar == '-':
-        return numero - 1
-    else:
-        raise ValueError("Mudar pode ser '+' ou '-'")
-
-
 def soma_pg(termo_1: float, razao: float, numero_de_termos: int) -> float:
     return termo_1*(pow(razao, numero_de_termos)-1)/(razao-1)
-
-
-# Conversão de Medidas
-
-class CelsiusFahrenheit:
-
-    @staticmethod
-    def to_celsius(fahrenheit: float, arredondar: int = False) -> (float, int):
-        """Converte um temperatura de celsius para fahrenheit"""
-        calc = (fahrenheit - 32) / 1.4
-        return round(calc, arredondar) if type(arredondar) == int else calc
-
-    @staticmethod
-    def celcius_fahrenheit(celsius: float, arredondar: int = False) -> (float, int):
-        """Converte um temperatura de celsius para fahrenheit"""
-        calc = celsius * 1.4 + 32
-        return round(calc, arredondar) if type(arredondar) == int else calc
-
-
-class RadianosGraus:
-    @staticmethod
-    def graus_radianos(graus: float, mostrar_como_decimal: bool = False) -> (float, str):
-        return pi * graus / 180 if mostrar_como_decimal else f"{graus/180}π"
-
-    @staticmethod
-    @dispatch(str)
-    def radianos_graus(radianos: str) -> float:
-        return float(radianos[:-1])*180
-
-    @staticmethod
-    @dispatch(float)
-    def radianos_graus(radianos: float) -> float:
-        return radianos * 180 / pi
-
-
-def calcular(string: str) -> float:
-    """
-    Calcula o valor de uma expessão dada no formato de uma string
-    :param string: A expressão para ser calculada
-    :return: O valor da expressão
-    """
-    string = string.split()
-
-    def validacao(calc: iter) -> NotImplemented:
-        # Values
-        try:
-            float(string[0])
-        except ValueError:
-            if string[0] != '(':
-                raise ValueError("Expressão Inválida")
-        for n in string:
-            try:
-                float(n)
-            except ValueError:
-                if n not in '()**/+-':
-                    raise ValueError(f"Expressão Inválida: {n}")
-
-        # Valid_parentheses
-        cont = 0
-        for char in calc:
-            if char == '(':
-                cont += 1
-            elif char == ')':
-                cont -= 1
-            if cont < 0:
-                raise ValueError("Parenteses não válidos")
-        if cont:
-            raise ValueError("Parenteses não válidos")
-
-    validacao(string)
-
-    def find_parenthesis(calc: iter) -> tuple:
-        start = calc.index('(') + 1
-        while True:
-            back = calc.index(')', start)
-            try:
-                front = calc.index('(', start)
-                start = front+1
-            except ValueError:
-                return start, back
-            if back < front:
-                return start, back
-
-    while '(' in string:
-        ini, fim = find_parenthesis(string)
-        new = string[ini:fim]
-        for _ in range(ini, fim+2):
-            string.pop(ini-1)
-        insert = str(calcular(' '.join(new)))
-        string.insert(ini-1, insert)
-
-    i = 0
-    while '**' in string and i < len(string):
-        if string[i] == '**':
-            f1 = float(string.pop(i - 1))
-            string.pop(i - 1)
-            f2 = float(string.pop(i - 1))
-            string.insert(i - 1, str(f1 ** f2))
-            i -= 1
-        i += 1
-    i = 0
-    while ('*' in string or '/' in string) and i < len(string):
-        if string[i] == '*':
-            f1 = float(string.pop(i-1))
-            string.pop(i-1)
-            f2 = float(string.pop(i-1))
-            string.insert(i - 1, str(f1 * f2))
-            i -= 1
-        elif string[i] == '/':
-            f1 = float(string.pop(i-1))
-            string.pop(i-1)
-            f2 = float(string.pop(i-1))
-            string.insert(i - 1, str(f1 / f2))
-            i -= 1
-        i += 1
-    i = 1
-    while ('+' in string or '-' in string) and i < len(string):
-        if string[i] == '+':
-            f1 = float(string.pop(i-1))
-            string.pop(i-1)
-            f2 = float(string.pop(i-1))
-            string.insert(i - 1, str(f1 + f2))
-        elif string[i] == '-':
-            f1 = float(string.pop(i-1))
-            string.pop(i-1)
-            f2 = float(string.pop(i-1))
-            string.insert(i - 1, str(f1 - f2))
-
-    return float(string[0])
 
 
 def simplify_polynomial(poly: str):
