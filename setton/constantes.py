@@ -8,6 +8,7 @@ O_ESPECIAL = 'óôõÓÔÕ'
 U_ESPECIAL = 'úÚ'
 VOGAIS = 'aeiou'
 CONSOANTES = 'bcdfghjklmnpqrstvwxyz'
+BACKSLASH = chr(92)
 CODABLE = digits + ascii_letters + punctuation
 
 # Código Morse

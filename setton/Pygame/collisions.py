@@ -1,4 +1,4 @@
-from . import hitboxes
+from setton.Pygame import hitboxes
 from multipledispatch import dispatch
 from math import sqrt
 
@@ -13,7 +13,7 @@ class CollisionDetector:
 
     @dispatch(type, hitboxes.Circle, hitboxes.Rect)
     def __new__(cls, circle: hitboxes.Circle, rect: hitboxes.Rect):
-        return cls.__new__(rect, circle)
+        return cls.__new__(cls, rect, circle)
 
     @dispatch(type, hitboxes.Rect, hitboxes.Rect)
     def __new__(cls, rect1: hitboxes.Rect, rect2: hitboxes.Rect):

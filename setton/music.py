@@ -3,7 +3,7 @@ from utils import keyboard_listener, valida_resposta, trata_acento
 from matematica import limite
 from random import choice
 from os import listdir, path
-from pygame import mixer, error
+from Pygame import mixer, error
 
 
 def coffin_dance():

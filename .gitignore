@@ -1,7 +1,6 @@
 venv/
 .idea/
 __pycache__/
-tests/
 build/
 dist/
 setton.egg-info/

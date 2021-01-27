@@ -1,3 +1,4 @@
+from __future__ import annotations
 from multipledispatch import dispatch
 from threading import Thread
 from keyboard import wait
@@ -5,40 +6,69 @@ from random import randint
 from os import listdir, path
 from setton.constantes import MORSE_COMPLETO, A_ESPECIAL, E_ESPECIAL, I_ESPECIAL, O_ESPECIAL, U_ESPECIAL, CODABLE
 from setton.matematica import primos_ate
-from string import ascii_lowercase, punctuation
+from string import punctuation
 from requests import get
 from cv2 import imread, imwrite
 from typing import Any, Callable
 from PIL import Image
+from collections import Iterable as Iter, Generator
 
 
-class List(list):
-    def _remove(self, __value):
-        self.remove(__value)
+# noinspection PyAbstractClass
+class Iterable(Iter):
+    def alphalen(self) -> int:
+        """
+        Retorna  o tamanho do iteravel contando somente os itens que satisfazem item.isaplha()
+        :return: A quantidade de itens alfabéticos contidos nesse iterável
+        """
+        alen = 0
+        for digit in self:
+            if digit.isalpha():
+                alen += 1
+        return alen
+
+
+class List(list, Iterable):
+    def remove(self, __value, count: int = -1) -> None:
+        c = 0
+        while __value in self and c != count:
+            super().remove(__value)
+            c += 1
+
+    def _remove(self, __value, count: int = -1) -> List:
+        self.remove(__value, count)
         return self
 
-    def replace(self, __old, __new, __count: int = -1):
+    def replace(self, __old, __new, __count: int = -1) -> None:
         c = 0
         while __old in self and c != __count:
             ind = self.index(__old)
             self[ind] = __new
             c += 1
 
-    def _replace(self, __old, __new, __count: int = -1):
+    def _replace(self, __old, __new, __count: int = -1) -> List:
         self.replace(__old, __new, __count)
         return self
 
-    def __sub__(self, other):
-        for el in other:
-            try:
-                self.remove(el)
-            except ValueError:
-                pass
+    def copy(self) -> List:
+        return List(self)
+
+    def __sub__(self, other: iter) -> List:
+        return List(x for x in self if x not in other)
 
 
-class String(str):
+class String(str, Iterable):
     def __sub__(self, other: str):
         return String(''.join(filter(lambda x: x not in other, self)))
+
+    def __getitem__(self, i) -> String:
+        return String(super().__getitem__(i))
+
+    def pop(self, index: int) -> String:
+        return String(self[:index] + self[index+1:])
+
+    def insert(self, index: int, seq: str) -> String:
+        return String(self[:index] + seq + self[index:])
 
 
 def trata_texto(acentos: bool = True, pontos: bool = True) -> callable:
@@ -52,9 +82,7 @@ def trata_texto(acentos: bool = True, pontos: bool = True) -> callable:
                     tex = trata_ponto(tex)
                 novo[ind] = tex[0]
             return funcao(*novo)
-
         return tratamento
-
     return decorador
 
 
@@ -107,24 +135,27 @@ def trata_acento(*args) -> tuple:
     :param args: Os textos para retirar os acentos.
     :return: Retorna args, tendo os acentos retirados dos textos.
     """
-    args = list(args)
+    args = [String(arg) if isinstance(arg, str) else arg for arg in args]
     for indice in range(len(args)):
-        if type(args[indice]) == str:
-            for letter in A_ESPECIAL:
-                args[indice].replace(letter.lower(), 'a')
-                args[indice].replace(letter.lower(), 'A')
-            for letter in E_ESPECIAL:
-                args[indice].replace(letter.lower(), 'e')
-                args[indice].replace(letter.lower(), 'E')
-            for letter in I_ESPECIAL:
-                args[indice].replace(letter.lower(), 'i')
-                args[indice].replace(letter.lower(), 'I')
-            for letter in O_ESPECIAL:
-                args[indice].replace(letter.lower(), 'o')
-                args[indice].replace(letter.lower(), 'O')
-            for letter in U_ESPECIAL:
-                args[indice].replace(letter.lower(), 'u')
-                args[indice].replace(letter.lower(), 'U')
+        if isinstance(args[indice], String):
+            var = args[indice]
+            for i in range(len(var)):
+                if var[i] in A_ESPECIAL:
+                    isupper = var[i].isupper()
+                    var = var.pop(i).insert(i, 'A' if isupper else 'a')
+                elif var[i] in E_ESPECIAL:
+                    isupper = var[i].isupper()
+                    var = var.pop(i).insert(i, 'E' if isupper else 'e')
+                elif var[i] in I_ESPECIAL:
+                    isupper = var[i].isupper()
+                    var = var.pop(i).insert(i, 'I' if isupper else 'i')
+                elif var[i] in O_ESPECIAL:
+                    isupper = var[i].isupper()
+                    var = var.pop(i).insert(i, 'O' if isupper else 'o')
+                elif var[i] in U_ESPECIAL:
+                    isupper = var[i].isupper()
+                    var = var.pop(i).insert(i, 'U' if isupper else 'u')
+            args[indice] = var
     return tuple(args)
 
 
@@ -134,12 +165,8 @@ def trata_ponto(*args) -> tuple:
     :param args: Os textos para retirar os pontos.
     :return: Retorna args, tendo os pontos retirados dos textos.
     """
-    args = list(args)
-    for texto in args:
-        if type(texto) == str:
-            for ponto in punctuation:
-                texto.replace(ponto, ' ')
-    return tuple(args)
+    table = str.maketrans({p: ' ' for p in punctuation})
+    return tuple(arg.translate(table) if isinstance(arg, str) else arg for arg in args)
 
 
 def split_nth(iteravel: iter, n: int) -> list:
@@ -215,9 +242,8 @@ def codifica(texto, modo, repetir) -> str:
         texto = ' '.join(resultado)
     # Primos
     if modo == 4:
-        texto = trata_ponto(texto)[0]
-        nums = [f"{num:2}".replace(' ', '0') for num in ([1] + primos_ate(100))]
-        codes = str.maketrans({letra: num for num, letra in zip(nums, ascii_lowercase)})
+        nums = [str(num).zfill(3) for num in primos_ate(500)]
+        codes = str.maketrans({letra: num for num, letra in zip(nums, CODABLE)})
         texto = texto.translate(codes)
     # Unicode
     if modo == 5:
@@ -291,19 +317,17 @@ def decodifica(texto, modo, repetir) -> str:
         texto = ''.join(resultado)
     # Primos
     if modo == 4:
-        nums = [f"{num:2}".replace(' ', '0') for num in ([1] + primos_ate(100))]
-        codes = tuple((num, letra) for num, letra in zip(nums, ascii_lowercase))
-        texto = split_nth(texto, 2)
+        nums = [str(num).zfill(3) for num in primos_ate(500)]
+        codes = {num: letra for num, letra in zip(nums, CODABLE)}
+        texto = split_nth(texto, 3)
         res = ''
 
         for num in texto:
-            if num == '  ':
-                res += ' '
-                continue
-            for cd in codes:
-                if cd[0] == str(num):
-                    res += cd[1]
-                    break
+            try:
+                letra = codes[num]
+                res += letra
+            except KeyError:
+                res += num
         texto = res
     # Unicode
     if modo == 5:
@@ -329,14 +353,15 @@ def mais_repetidas(iterable: iter, quantidade_de_itens: int = 3, quantidade_mini
     """
     Busca os itens mais repetidos em um iterável
     :param iterable: O iterável para fazer a busca
-    :param quantidade_de_itens: A quantidade de itens que deve ser retonada
-    :param quantidade_minima: A quantidade mínima de vezes que um item deve aparecer para ser retornado
+    :param quantidade_de_itens: A quantidade de itens que deve ser retonada (por padrão retorna os 3 itens que mais
+    aparecem.
+    :param quantidade_minima: A quantidade mínima de vezes que um item deve aparecer para ser retornado (Se nenhum item
+    passar essa validação, o retorno será vazio).
     :return: Uma lista com os itens mais repetidos seguindo as regras acima
     """
-    text = list(set(iterable))
-    text.sort(key=list(iterable).count, reverse=True)
-    text = [item for item in text if text.count(item) >= quantidade_minima]
-    return text[:quantidade_de_itens]
+    ordered = sort_2_keys(set(iterable), list(iterable).count, int, reverse=True)
+    ordered = [item for item in ordered if list(iterable).count(item) >= quantidade_minima]
+    return ordered[:quantidade_de_itens]
 
 
 def inverte_dict(dicionario: dict) -> dict:
@@ -346,19 +371,6 @@ def inverte_dict(dicionario: dict) -> dict:
     :return: O novo dicionário
     """
     return {v: k for k, v in dicionario.items()}
-
-
-def alphalen(iterable: iter) -> int:
-    """
-    Retorna  o tamanho do iteravel contando somente os itens que satisfazem item.isaplha()
-    :param iterable: O iterável que deverá ser contado
-    :return: A quantidade de itens alfabéticos contidos nesse iterável
-    """
-    alen = 0
-    for digit in iterable:
-        if digit.isalpha():
-            alen += 1
-    return alen
 
 
 def sort_2_keys(__iter: iter, primary: callable, secondary: callable, reverse: bool = False):
@@ -374,7 +386,7 @@ def sort_2_keys(__iter: iter, primary: callable, secondary: callable, reverse: b
     return sorted(__iter, key=primary, reverse=reverse)
 
 
-def get_all_files(directory: str, extension: str = '*', start_string: str = './', ignore_file='') -> str:
+def get_all_files(directory: str, extension: str = '*', start_string: str = './', ignore_file='') -> Generator[str]:
     """
     Busca todos os arquivos em 'directory' e em todos os subdiretórios com a extensão 'extension'.
     :param directory: O diretório base para a busca
@@ -445,7 +457,7 @@ def desempacota_listas(lista: list) -> list:
     return new
 
 
-def get_pixels(img_path: str, cor: tuple[int]) -> tuple[int]:
+def get_pixels(img_path: str, cor: tuple[int]) -> Generator[tuple[int]]:
     """
     Retorna todos os pixels de uma determinada cor contidos na imagem especificada
     :param img_path: O caminho relativo para a imagem 
@@ -479,12 +491,9 @@ def esteganografia(texto: str, file_name: str = 'esteganografia.png', override: 
             text += chr(image.item(0, x, 0))
         return text
 
-    try:
-        if override:
-            raise TypeError
-        return traduzir()
-    except TypeError:
+    if override or not path.exists(file_name):
         codificar()
+    return traduzir()
 
 
 def all_key(_iterable: iter, key: Callable):

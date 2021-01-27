@@ -289,48 +289,27 @@ class CelsiusFahrenheit:
     @staticmethod
     def to_celsius(fahrenheit: float, arredondar: int = False) -> (float, int):
         """Converte um temperatura de celsius para fahrenheit"""
-        calc = (fahrenheit - 32) / 1.4
+        calc = (fahrenheit - 32) / 1.8
         return round(calc, arredondar) if type(arredondar) == int else calc
 
     @staticmethod
-    def celcius_fahrenheit(celsius: float, arredondar: int = False) -> (float, int):
+    def to_fahrenheit(celsius: float, arredondar: int = False) -> (float, int):
         """Converte um temperatura de celsius para fahrenheit"""
-        calc = celsius * 1.4 + 32
+        calc = celsius * 1.8 + 32
         return round(calc, arredondar) if type(arredondar) == int else calc
 
 
 class RadianosGraus:
     @staticmethod
-    def graus_radianos(graus: float, mostrar_como_decimal: bool = False) -> (float, str):
-        return pi * graus / 180 if mostrar_como_decimal else f"{graus/180}π"
+    def para_radianos(graus: float) -> float:
+        return pi * graus / 180
 
     @staticmethod
-    @dispatch(str)
-    def radianos_graus(radianos: str) -> float:
-        return float(radianos[:-1])*180
-
-    @staticmethod
-    @dispatch(float)
-    def radianos_graus(radianos: float) -> float:
+    def para_graus(radianos: float) -> float:
         return radianos * 180 / pi
 
 
 # Funções
-
-def mmc2(num1, num2):
-    maior = max(num1, num2)
-    menor = min(num1, num2)
-    maiorini = maior
-    while True:
-        if not maior % menor:
-            return maior
-        maior += maiorini
-
-
-def mmc(*args):
-    return reduce(mmc2, args)
-
-
 def primo(numero):
     if numero == 2:
         return True
@@ -395,23 +374,31 @@ def gera_funcao_quadratica(a: float, b: float, c: float) -> Callable[[float], fl
 
 
 def resolve_funcao_quadratica(a: float, b: float, c: float) -> str:
+    if a == 0:
+        raise ValueError('O coeficiente de x² não pode ser 0.')
     delta = b**2 - 4*a*c
+    denom = 2 * a
     try:
-        solucao1 = (-b + sqrt(delta)) / (2 * a)
-        solucao2 = (-b - sqrt(delta)) / (2 * a)
+        solucao1 = -b - sqrt(delta)
+        solucao2 = -b + sqrt(delta)
     except ValueError:
-        return 'Não há solução para os valores dados.'
-    except ZeroDivisionError:
-        return 'O coeficiente de x² não pode ser 0.'
+        raise ValueError('Não há solução para os valores dados.')
+
+    if not solucao1 % 1:
+        solucao1 = int(solucao1)
+    if not solucao2 % 1:
+        solucao2 = int(solucao2)
+
     if delta == 0:
-        return f'A solução é: {solucao1}'
+
+        return str(int(solucao1 / denom) if not solucao1 % denom else f'{solucao1}/{denom}')
     # Delta > 0
     if sqrt(delta) % 1 != 0:
-        return f'As soluções são: ({-b} + √{delta}) / {2*a}, ({-b} - √{delta}) / {2*a}'  # Raiz de Delta não é exata
-    elif (solucao1 or solucao2) % 1 != 0:
-        return f'As soluções são: {-b + sqrt(delta)} / {2*a}, {-b - sqrt(delta)} / {2*a}'
+        return f'({-b} - sqrt({delta})) / {denom}, ({-b} + sqrt({delta})) / {denom}'  # Raiz de Delta não é exata
+    elif (solucao1 or solucao2) % denom != 0:
+        return f'{solucao1}/{denom}, {solucao2}/{denom}'
     else:
-        return f'As soluções são: {solucao1}, {solucao2}'  # Solução é exata
+        return f'{int(solucao1 / denom)}, {int(solucao2 / denom)}'  # Solução é exata
 
 
 def limite(maximo: float, minimo: float, valor: float) -> float:

@@ -1,6 +1,7 @@
 import pygame as pg
 pg.init()
 
+
 class DefaultGame:
     def __init__(self, screen: pg.Surface, screen_name: str = "My Game",
                  screen_icon: pg.Surface = pg.Surface((50, 50), masks=pg.Color(0, 0, 0, 0))):
